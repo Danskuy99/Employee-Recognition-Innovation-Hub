@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HeartCare Hub - Portal Apresiasi & Evaluasi</title>
+  
+  <!-- FontAwesome & Google Fonts -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- SweetAlert2 & SheetJS -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- LOGIN OVERLAY -->
+  <div id="loginOverlay" class="overlay">
+    <div class="login-card">
+      <div class="brand-logo">
+        <i class="fa-solid fa-heart-pulse heartbeat-icon"></i>
+        <h2>HeartCare Hub</h2>
+      </div>
+      <p class="login-subtitle">Silakan login untuk mengakses portal internal</p>
+      
+      <form id="loginForm">
+        <div class="form-group">
+          <label><i class="fa-solid fa-user"></i> Username</label>
+          <input type="text" id="loginUser" placeholder="Masukkan username..." required>
+        </div>
+        <div class="form-group">
+          <label><i class="fa-solid fa-lock"></i> Password</label>
+          <input type="password" id="loginPass" placeholder="Masukkan password..." required>
+        </div>
+        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-right-to-bracket"></i> Masuk Sistem</button>
+      </form>
+      
+      <button id="resetDataBtn" class="btn-text" style="margin-top: 15px; width: 100%;">
+        <i class="fa-solid fa-rotate-left"></i> Reset Data Demo (5 Akun)
+      </button>
+    </div>
+  </div>
+
+  <!-- MAIN APP CONTAINER -->
+  <div id="appContainer" style="display: none;">
+    <!-- NAVBAR -->
+    <header class="navbar">
+      <div class="nav-brand">
+        <i class="fa-solid fa-heart-pulse heartbeat-icon"></i>
+        <span>HeartCare Hub</span>
+      </div>
+      
+      <div class="nav-tabs">
+        <button class="nav-tab-btn active" data-nav="navDashboard"><i class="fa-solid fa-trophy"></i> Penilaian</button>
+        <button class="nav-tab-btn" data-nav="navKudos"><i class="fa-solid fa-heart"></i> Kudos Balon</button>
+        <button class="nav-tab-btn" data-nav="navInovasi"><i class="fa-solid fa-lightbulb"></i> Inovasi</button>
+        <button class="nav-tab-btn" data-nav="navChat"><i class="fa-solid fa-comments"></i> Pesan Chat</button>
+        <!-- TAB ADMIN SEPARATE (HANYA MUNCUL UTK ADMIN WILLIAM) -->
+        <button id="adminNavTab" class="nav-tab-btn nav-admin-tab" data-nav="navAdmin" style="display: none;">
+          <i class="fa-solid fa-user-shield"></i> Kelola Admin
+        </button>
+      </div>
+
+      <div class="user-profile">
+        <div class="user-info">
+          <span id="userNamaDisplay" class="user-name">Loading...</span>
+          <span id="userRoleBadge" class="user-role-badge">Role</span>
+        </div>
+        <span id="userPoinDisplay" class="poin-badge"><i class="fa-solid fa-heart heartbeat-icon"></i> 0 Poin</span>
+        <button id="openSettingsBtn" class="btn-icon" title="Pengaturan"><i class="fa-solid fa-gear"></i></button>
+        <button id="logoutBtn" class="btn-icon btn-danger" title="Logout"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+      </div>
+    </header>
+
+    <!-- CONTENT CONTAINER -->
+    <main class="main-content">
+
+      <!-- TAB SEPARATE: PANEL KELOLA ADMIN (KHUSUS ADMIN/UPLOAD) -->
+      <section id="navAdmin" class="nav-section" style="display: none;">
+        <div class="card admin-panel">
+          <div class="card-header">
+            <h3><i class="fa-solid fa-user-shield"></i> Panel Kelola IT Admin</h3>
+            <span class="badge badge-admin">Akses Khusus Admin</span>
+          </div>
+          <p class="card-sub">Gunakan panel ini untuk mengimpor data masal, unduh template, serta mencari dan menghapus akun pegawai.</p>
+          
+          <div class="admin-actions" style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+            <button id="downloadTemplateBtn" class="btn btn-secondary">
+              <i class="fa-solid fa-file-excel"></i> Download Template Excel
+            </button>
+            
+            <label for="excelFileInput" class="btn btn-success" style="cursor: pointer;">
+              <i class="fa-solid fa-file-import"></i> Upload File Excel
+            </label>
+            <input type="file" id="excelFileInput" accept=".xlsx, .xls" style="display: none;">
+          </div>
+
+          <!-- PENCARIAN & KELOLA AKUN -->
+          <div style="margin-top: 25px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <h4><i class="fa-solid fa-users-gear"></i> Kelola Akun Pegawai (<span id="totalUsersCount">0</span>)</h4>
+              <input type="text" id="adminSearchUserInput" class="search-input" placeholder="🔍 Cari nama/username yang mau dihapus..." style="width: 280px; margin-bottom:0;">
+            </div>
+            <div id="adminUserList" class="admin-user-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- NAV SECTION: DASHBOARD PENILAIAN -->
+      <section id="navDashboard" class="nav-section active-section">
+        <div class="grid-2col">
+          <!-- TOP 5 STAFF / PERAWAT -->
+          <div class="card">
+            <div class="card-header">
+              <h3><i class="fa-solid fa-user-nurse"></i> Top Perawat & Staff</h3>
+              <span class="badge-sub">Bulan Ini</span>
+            </div>
+            <div id="topStaffList" class="rank-list"></div>
+          </div>
+
+          <!-- TOP 5 DOKTER -->
+          <div class="card">
+            <div class="card-header">
+              <h3><i class="fa-solid fa-user-doctor"></i> Top Dokter Terbaik</h3>
+              <span class="badge-sub">Bulan Ini</span>
+            </div>
+            <div id="topDoctorList" class="rank-list"></div>
+          </div>
+        </div>
+
+        <!-- FORM EVALUASI RESMI -->
+        <div class="card" style="margin-top: 20px;">
+          <h3><i class="fa-solid fa-star"></i> Form Evaluasi & Penilaian Kinerja Tim</h3>
+          <p class="card-sub">Berikan penilaian positif & konstruktif untuk rekan dokter, perawat, maupun staf.</p>
+          
+          <form id="generalRatingForm" style="margin-top: 15px;">
+            <div class="grid-2col">
+              <div class="form-group">
+                <label>Target Penerima Evaluasi:</label>
+                <input type="text" id="rateSearchInput" class="search-input" placeholder="🔍 Ketik nama untuk mencari...">
+                <select id="rateTargetSelect" required><option value="">-- Pilih Rekan --</option></select>
+              </div>
+              <div class="form-group">
+                <label>Nilai Skor / Performa:</label>
+                <select id="rateScoreSelect" required>
+                  <option value="5">⭐⭐⭐⭐⭐ (5 - Sangat Baik / Responsif)</option>
+                  <option value="4">⭐⭐⭐⭐ (4 - Baik & Kooperatif)</option>
+                  <option value="3">⭐⭐⭐ (3 - Cukup)</option>
+                  <option value="2">⭐⭐ (2 - Kurang)</option>
+                  <option value="1">⭐ (1 - Perlu Evaluasi)</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Catatan Masukan & Evaluasi:</label>
+              <textarea id="rateNoteText" placeholder="Tulis masukan secara profesional..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-warning"><i class="fa-solid fa-paper-plane"></i> Kirim Penilaian</button>
+          </form>
+        </div>
+
+        <!-- RIWAYAT PENILAIAN RESMI ANTAR TIM -->
+        <div class="card" style="margin-top: 20px;">
+          <div class="card-header">
+            <h3><i class="fa-solid fa-clock-rotate-left"></i> Riwayat Penilaian Resmi Antar Tim</h3>
+          </div>
+          <div id="ratingFeedList" class="feed-list" style="margin-top: 15px;"></div>
+        </div>
+      </section>
+
+      <!-- NAV SECTION: KUDOS BALON -->
+      <section id="navKudos" class="nav-section" style="display: none;">
+        <div class="grid-2col">
+          <div class="card">
+            <h3><i class="fa-solid fa-paper-plane"></i> Kirim Kudos / Ucapan Apresiasi</h3>
+            <p class="card-sub">Kirim pesan positif publik untuk rekan kerja. Penerima akan mendapatkan +10 Poin!</p>
+            <form id="kudosForm" style="margin-top: 15px;">
+              <div class="form-group">
+                <label>Pilih Penerima Kudos:</label>
+                <input type="text" id="kudosSearchInput" class="search-input" placeholder="🔍 Cari nama penerima...">
+                <select id="kudosTarget" required><option value="">-- Pilih Penerima --</option></select>
+              </div>
+              <div class="form-group">
+                <label>Pesan Apresiasi / Terima Kasih:</label>
+                <textarea id="kudosPesan" placeholder="Contoh: Makasih ya udah bantu antrean darurat tadi!" required></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary"><i class="fa-solid fa-heart heartbeat-icon"></i> Kirim Kudos Balon</button>
+            </form>
+          </div>
+
+          <div class="card">
+            <h3><i class="fa-solid fa-comments"></i> Papan Balon Kudos Publik</h3>
+            <div id="kudosFeed" class="chat-feed" style="margin-top: 15px;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- NAV SECTION: INOVASI -->
+      <section id="navInovasi" class="nav-section" style="display: none;">
+        <div class="grid-2col">
+          <div class="card">
+            <h3><i class="fa-solid fa-lightbulb"></i> Kirim Ide / Inovasi Baru</h3>
+            <form id="inovasiForm" style="margin-top: 15px;">
+              <div class="form-group">
+                <label>Judul Ide / Inovasi:</label>
+                <input type="text" id="inovasiJudul" placeholder="Masukkan judul ringkas..." required>
+              </div>
+              <div class="form-group">
+                <label>Deskripsi & Solusi yang Ditawarkan:</label>
+                <textarea id="inovasiDesk" placeholder="Jelaskan detail ide inovasimu..." required></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary"><i class="fa-solid fa-paper-plane"></i> Kirim Ide Inovasi</button>
+            </form>
+          </div>
+
+          <div class="card">
+            <h3><i class="fa-solid fa-list-check"></i> Daftar Usulan Inovasi</h3>
+            <div id="inovasiFeed" class="feed-list" style="margin-top: 15px;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- NAV SECTION: DIRECT CHAT MODERN -->
+      <section id="navChat" class="nav-section" style="display: none;">
+        <div class="chat-layout card">
+          <div class="chat-sidebar">
+            <div class="chat-sidebar-header">
+              <h4><i class="fa-solid fa-users"></i> Kontak Pegawai</h4>
+              <input type="text" id="chatSearchContact" class="search-input" placeholder="🔍 Cari kontak..." style="margin-top: 8px; margin-bottom: 0;">
+            </div>
+            <div id="chatUsersList" class="chat-user-list"></div>
+          </div>
+
+          <div class="chat-main">
+            <div class="chat-header">
+              <div class="chat-header-user">
+                <i class="fa-solid fa-circle-user chat-header-avatar"></i>
+                <div>
+                  <h4 id="activeChatName">Pilih Kontak Chat</h4>
+                  <p id="activeChatRole" class="card-sub">Internal Chat System</p>
+                </div>
+              </div>
+            </div>
+            <div id="directChatContainer" class="chat-messages-container"></div>
+            <form id="directChatForm" class="chat-input-bar" style="display: none;">
+              <input type="text" id="directChatMessage" placeholder="Ketik pesan pribadi..." required autocomplete="off">
+              <button type="submit" class="btn btn-primary"><i class="fa-solid fa-paper-plane"></i></button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- FOOTER BRANDING BUBBLYSQUIRTLE -->
+    <footer class="app-footer">
+      <p>Powered by <strong>Bubblysquirtle</strong> &bull; est. 2026</p>
+    </footer>
+
+  </div>
+
+  <!-- MODAL PENGATURAN -->
+  <div id="settingsOverlay" class="overlay" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-gear"></i> Pengaturan Akun</h3>
+        <button id="closeSettingsModal" class="btn-icon"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="settings-tabs">
+        <button class="tab-btn active" data-tab="tabProfile">Profil</button>
+      </div>
+
+      <div id="tabProfile" class="tab-content" style="margin-top:15px;">
+        <div class="form-group">
+          <label>Nama Lengkap</label>
+          <input type="text" id="profileNameInput" disabled>
+        </div>
+        <div class="form-group">
+          <label>Role / Jabatan</label>
+          <input type="text" id="profileRoleInput" disabled>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
