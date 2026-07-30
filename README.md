@@ -5,6 +5,19 @@ inovasi buat pegawai berprestasi
 **HeartCare Hub** adalah aplikasi web internal rumah sakit/klinik yang dirancang untuk meningkatkan budaya kerja positif, transparansi penilaian kinerja, serta kolaborasi antar dokter, perawat, dan staf medis.
 
 ---
+## 🔑 Akun Demo untuk Pengujian
+
+Gunakan akun-akun demo di bawah ini untuk mencoba berbagai fitur berdasarkan peran (*role*):
+
+> 💡 **Catatan:** Password untuk **semua akun demo** adalah **`123`**. Jika akun terhapus atau diubah, tekan tombol **"Reset Data Demo"** di halaman login untuk mengembalikannya.
+
+| Nama Lengkap | Username | Role / Jabatan | Hak Akses Utama |
+| :--- | :--- | :--- | :--- |
+| **William** | `william` | **Admin** | Akses Penuh + Tab *Kelola Admin* (Upload Excel & Hapus Akun) |
+| **Dr. Dandi Siregar, Sp.JP** | `dandi` | **Dokter** | Penilaian Kinerja, Kudos, Chat, Inovasi |
+| **Dr. Bryan, Sp.JP** | `bryan` | **Dokter** | Penilaian Kinerja, Kudos, Chat, Inovasi |
+| **Wulan Margi, S.Kep** | `wulan` | **Perawat** | Penilaian Kinerja, Kudos, Chat, Inovasi |
+| **Zhevo Wijaya** | `zhevo` | **Staff** | Penilaian Kinerja, Kudos, Chat, Inovasi |
 
 ## ✨ Fitur Utama
 
